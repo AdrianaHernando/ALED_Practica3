@@ -5,6 +5,7 @@ import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -52,22 +53,26 @@ public class FASTAReader {
 			fis.close();
 			throw new IOException("The file " + fileName + " is too big. Can't be contained in an array.");
 		}
-		byte[] content = new byte[(int) len];
+		byte[] content = new byte[(int) len]; //crea array content del tamaño del canal de del fis
 		int bytesRead = 0;
 		int numRead = 0;
 		String line;
 		while ((line = fid.readLine()) != null) {
 			// Put every character in upper case
 			line = line.toUpperCase();
-			numRead = line.length();
-			byte[] newData = line.getBytes();
-			for (int i = 0; i < numRead; i++)
-				content[bytesRead + i] = newData[i];
-			bytesRead += numRead;
+			numRead = line.length(); //Crea variable con longitud de linea del archivo de entrada q estoy leyendo. el numero de valores leidos será el tamaño de la linea que acaba de leer
+			/*Creo array auxiliar que lleno con los datos (bytes de info) de las líneas del archivo de entrada. 
+			 * en cada posición una secuencia/fila de nucleotidos del archivo de entrada
+			 */
+			byte[] newData = line.getBytes(); 
+			for (int i = 0; i < numRead; i++) //ejecuto hasta el tamaño de la línea del archivo
+				content[bytesRead + i] = newData[i]; //voy llenando el array content con los datos del array auxiliar. 
+				//Escribo en content cada secuencia en la posición en la que ha acabado la anterior.			
+				bytesRead += numRead; //va a indicarme la posición en la q ha acabado de escribir la ultima secuencia.
 		}
 		fis.close();
-		this.content = content;
-		this.validBytes = bytesRead;
+		this.content = content; //inicializa el array content
+		this.validBytes = bytesRead; //inicializa el atributo validBytes
 	}
 
 	/**
@@ -110,7 +115,7 @@ public class FASTAReader {
 
 	/*
 	 * Helper method that checks if a pattern appears at a specific position in the
-	 * data array. It checks every byte of the pattern one by one. If the pattern
+	 * data array. It _checks every byte of the pattern one by one_. If the pattern
 	 * length would need to access a position after the valid bytes of the array, it
 	 * throws a new FASTAException to indicate this fact.
 	 * 
@@ -122,12 +127,12 @@ public class FASTAReader {
 			throw new FASTAException("Pattern goes beyond the end of the file.");
 		}
 		boolean match = true;
-		for (int i = 0; i < pattern.length; i++) {
+		for (int i = 0; i < pattern.length; i++) { //recorre entero el pattern mirando si cada elemento coincide con el de esa posición del array "content". 
 			if (pattern[i] != content[position + i]) {
 				match = false;
 			}
 		}
-		return match;
+		return match; //la variable ha ido cambiando para cada elemento
 	}
 
 	/*
@@ -135,8 +140,18 @@ public class FASTAReader {
 	 * pattern when one has been found to be different.
 	 */
 	private boolean compareImproved(byte[] pattern, int position) throws FASTAException {
-		// TODO
-		return false;
+	//HECHO POR MI	
+		if (position + pattern.length > validBytes) {
+			throw new FASTAException("Pattern goes beyond the end of the file.");
+		}
+		boolean match = true;
+		for (int i = 0; i < pattern.length; i++) { //recorre entero el pattern mirando si cada elemento coincide con el de esa posición del array "content". 
+			if (pattern[i] != content[position + i]) {
+				match = false;
+				break; //IMPROVEMENT: en cuanto una base del patrón no coincide, devuelve false
+			}
+		}
+		return match; //la variable ha ido cambiando para cada elemento
 	}
 
 	/*
@@ -162,8 +177,18 @@ public class FASTAReader {
 	 *         pattern in the data.
 	 */
 	public List<Integer> search(byte[] pattern) {
-		// TODO
-		return null;
+	//HECHO POR MI
+		List<Integer> initialPosition = new ArrayList<Integer>(); //Creo la lista que voy a devolver con las posiciones iniciales en las que aparece el patrón 
+		for(int i = 0; i < this.content.length; i++) { //recorro el array de datos
+			try {
+				if (compareImproved (pattern, i)) { //ejecutando compare entre el pattern y cada posicion del array de datos
+					initialPosition.add(i);
+				}	
+			} catch (FASTAException e) { //Tengo en cuenta que compare puede tirar FASTAException
+				break;
+			}
+		}
+		return initialPosition; //devuelvo la lista de las posiciones en las que he encontrado el pattern
 	}
 
 	/**
