@@ -127,7 +127,7 @@ public class FASTAReader {
 			throw new FASTAException("Pattern goes beyond the end of the file.");
 		}
 		boolean match = true;
-		for (int i = 0; i < pattern.length; i++) { //recorre entero el pattern mirando si cada elemento coincide con el de esa posición del array "content". 
+		for (int i = 0; i < pattern.length; i++) { //recorre ENTERO el pattern mirando si cada elemento coincide con el de esa posición del array "content". 
 			if (pattern[i] != content[position + i]) {
 				match = false;
 			}
@@ -145,7 +145,7 @@ public class FASTAReader {
 			throw new FASTAException("Pattern goes beyond the end of the file.");
 		}
 		boolean match = true;
-		for (int i = 0; i < pattern.length; i++) { //recorre entero el pattern mirando si cada elemento coincide con el de esa posición del array "content". 
+		for (int i = 0; i < pattern.length; i++) { //recorre el pattern mirando si cada elemento coincide con el de esa posición del array "content". 
 			if (pattern[i] != content[position + i]) {
 				match = false;
 				break; //IMPROVEMENT: en cuanto una base del patrón no coincide, devuelve false
@@ -163,9 +163,20 @@ public class FASTAReader {
 	 * ones present in the indicated position.
 	 */
 	private int compareNumErrors(byte[] pattern, int position) throws FASTAException {
-		// TODO
-		return -1;
+		//HECHO POR MI
+		if (position + pattern.length > validBytes) {
+			throw new FASTAException("Pattern goes beyond the end of the file.");
+		}
+		int diference = 0; //inicializo variable con la que voy a contar el numero de bases que difieren entre el pattern y el array de datos en la posicion dada.
+		for(int i = 0; i < pattern.length; i++) { //recorro el pattern
+			if (pattern[i] != content[position + i]) { //miro indice a indice si coincide con el array de datos 
+				//Si difiere la base de ese indice, contabilizo que hay una diferencia
+				diference++; //estoy contando todas las diferencias que haya. Quizá sería mejor si creo un break cuando diference>1, así deja de buscar. Para SNV solo contamos posicion si difiere como maximo en 1 base.
+			}
+		}
+		return diference;
 	}
+	
 
 	/**
 	 * Implements a linear search to look for the provided pattern in the data
@@ -184,7 +195,7 @@ public class FASTAReader {
 				if (compareImproved (pattern, i)) { //ejecutando compare entre el pattern y cada posicion del array de datos
 					initialPosition.add(i);
 				}	
-			} catch (FASTAException e) { //Tengo en cuenta que compare puede tirar FASTAException
+			} catch (FASTAException e) { //Tengo en cuenta que compare puede tirar FASTAException. Si se produce, la capturamos y terminamos la búsqueda.
 				break;
 			}
 		}
@@ -203,9 +214,19 @@ public class FASTAReader {
 	 * @return All the positions of the first character of every occurrence of the
 	 *         pattern (with up to 1 errors) in the data.
 	 */
-	public List<Integer> searchSNV(byte[] pattern) {
-		// TODO
-		return null;
+	public List<Integer> searchSNV(byte[] pattern) {//Va a usar compareNumErrors
+	//HECHO POR MI
+		List<Integer> initialPosition = new ArrayList<Integer>(); //Creo la lista que voy a devolver con las posiciones iniciales en las que aparece el patrón permitiendo SNV
+		for(int i = 0; i < this.content.length; i++) { //recorro el array de datos
+			try {
+				if (compareNumErrors(pattern, i) <= 1) { //si pattern difiere en 0 o en 1 con esa posicion del genoma, añado la posicion a mi lista de resultados.
+					initialPosition.add(i);
+				}	
+			} catch (FASTAException e) { //Tengo en cuenta que compare puede tirar FASTAException. Si se produce, la capturamos y terminamos la búsqueda.
+				break;
+			}
+		}
+		return initialPosition; //devuelvo la lista de las posiciones en las que he encontrado el pattern permitiendo SNV
 	}
 
 	public static void main(String[] args) {
@@ -215,7 +236,7 @@ public class FASTAReader {
 			return;
 		System.out.println("Tiempo de apertura de fichero: " + (System.nanoTime() - t1));
 		long t2 = System.nanoTime();
-		List<Integer> posiciones = reader.search(args[1].getBytes());
+		List<Integer> posiciones = reader.searchSNV(args[1].getBytes());
 		System.out.println("Tiempo de búsqueda: " + (System.nanoTime() - t2));
 		if (posiciones.size() > 0) {
 			for (Integer pos : posiciones)
