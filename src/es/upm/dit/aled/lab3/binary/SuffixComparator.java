@@ -37,7 +37,7 @@ public class SuffixComparator implements Comparator<Suffix> {
 		int index1 = s1.suffixIndex;
 		int index2 = s2.suffixIndex;
 
-		int len = Math.min(this.reader.getValidBytes() - index1, this.reader.getValidBytes() - index2);
+		int len = Math.min(this.reader.getValidBytes() - index1, this.reader.getValidBytes() - index2); //PREGUNTAR
 
 		for (int i = 0; i < len; i++) {
 			if (this.reader.getContent()[index1 + i] < this.reader.getContent()[index2 + i])
@@ -47,6 +47,6 @@ public class SuffixComparator implements Comparator<Suffix> {
 		}
 		// If one is a prefix of the other, the shorter one (with larger index) comes
 		// first (lexicographically).
-		return index2 - index1;
+		return index2 - index1; //??
 	}
 }

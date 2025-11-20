@@ -1,5 +1,6 @@
 package es.upm.dit.aled.lab3.binary;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -78,10 +79,45 @@ public class FASTAReaderSuffixes extends FASTAReader {
 	 */
 	@Override
 	public List<Integer> search(byte[] pattern) {
-		// TODO
-		return null;
+		// HECHO POR MI:
+		List<Integer> positionFound = new ArrayList<Integer>(); //Creo la lista que voy a devolver con las posiciones en las que aparece el patrón
+		// Inicializacion:
+		int lo = 0; //Limite inferior de la busqueda binaria 
+		int hi = suffixes.length; //Limite superior de la busqueda binaria
+		boolean found = false; //Lo usaremos para determinar si se ha encontrado el pattern
+		int index = 0; //contador que rastrea el carácter actual que se está comparando con el pattern
+		
+		//Comparación iterativa (bucle de búsqueda binaria)
+		do {
+			int m = (int) Math.floor(lo+(hi-lo)/2); //Calculo el indice medio en el rango de busqueda actual
+			int posSuffix = suffixes[m].suffixIndex; //Extraigo la posición en el genoma (suffixIndex) del sufijo que se encuentra en suffix[m]
+			
+			//Comienza a comparar el pattern con este sufijo carácter por carácter, comenzando por pattern[index]
+			if(pattern[index] == content[posSuffix+index]) { //Si los caracteres actuales coinciden:
+					
+				index++; //Incremento index para verificar el siguiente caracter en la siguiente iteración
+				//DUDA: incremento index antes o después: Tiene que ser DESPUÉS, sino te sales del array.
+				if(index == pattern.length){//COINCIDENCIA COMPLETA ENCONTRADA: comparación llega al final del patrón y los ultimos caracteres también coinciden.
+					positionFound.add(posSuffix); //guardo la posición actual en la lista de resultados
+					found = true;
+					}
+			}
+			//DIVISION ESTANDAR DE BUSQUEDA BINARIA: si el principio del sufijo de suffixes[m] no coincide con el patrón
+			else if (pattern[index] < content[posSuffix+index]) { // el caracter del pattern es lexicográficamente anterior al carácter del sufijo
+				hi = m--; //restablecemos el limite superior de la busqueda descartando la mitad derecha de suffixes
+				index = 0; //IMP: reinicio el contador
+			}
+			else {//pattern[index] > content[posSuffix+index]: el caracter del pattern es lexicográficamente posterior al del sufijo
+				lo = m++; //restablecemos el limite inferior de la busqueda descartando la mitad izquierda de suffixes
+				index = 0; //IMP: reinicio el contador
+			}
+			//RESTABLECEMOS LIMITES SUPERIOR E INFERIOR sin coger de nuevo m, que ya lo hemos mirado.
+		} while (!found==true && !(hi-lo<=1)); //Para que el bucle continúe hasta que se haya encontrado una coincidencia total O el espacio de busqueda sea demasiado pequeño
+			
+		return positionFound;//devuelvo la lista de las posiciones en las que he encontrado el pattern		
 	}
 
+	
 	public static void main(String[] args) {
 		long t1 = System.nanoTime();
 		FASTAReaderSuffixes reader = new FASTAReaderSuffixes(args[0]);
