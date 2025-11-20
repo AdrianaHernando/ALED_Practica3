@@ -85,7 +85,7 @@ public class FASTAReaderSuffixes extends FASTAReader {
 		int lo = 0; //Limite inferior de la busqueda binaria 
 		int hi = suffixes.length; //Limite superior de la busqueda binaria
 		boolean found = false; //Lo usaremos para determinar si se ha encontrado el pattern
-		int index = 0; //contador que rastrea el carácter actual que se está comparando con el pattern
+		int index = 0; //contador que rastrea el carácter actual que se está comparando con el pattern, indice con el que recorremos el pattern y el sufijo dentro de content
 		
 		//Comparación iterativa (bucle de búsqueda binaria)
 		do {
@@ -96,11 +96,46 @@ public class FASTAReaderSuffixes extends FASTAReader {
 			if(pattern[index] == content[posSuffix+index]) { //Si los caracteres actuales coinciden:
 					
 				index++; //Incremento index para verificar el siguiente caracter en la siguiente iteración
-				//DUDA: incremento index antes o después: Tiene que ser DESPUÉS, sino te sales del array.
+				//DUDA: incremento index antes o después: Tiene que ser ANTES, sino te sales del array.
 				if(index == pattern.length){//COINCIDENCIA COMPLETA ENCONTRADA: comparación llega al final del patrón y los ultimos caracteres también coinciden.
 					positionFound.add(posSuffix); //guardo la posición actual en la lista de resultados
 					found = true;
+					//MODIFICACIÓN PARA ENCONTRAR TODAS LAS COINCIDENCIAS: Cuando encuentro una, recorrer la lista de sufijos hacia arriba y hacia abajo.
+					
+					//Recorro lista de sufijos HACIA ARRIBA hasta que encuentro uno que no coincida
+					int index2 = 0;//contador para recorrer patrón y los sufijos anteriores a la coincidencia hallada
+					for (int i = 1; i<=m; i++) {
+						int posSuffixUp = suffixes[m-i].suffixIndex;
+						if(pattern[index2] != content[posSuffixUp]) { //si el primer valor del patrón no coincide con el primero del sufijo, dejo de mirar ese sufijo ni anteriores
+							break;
+						}
+						while(pattern[index2] == content[posSuffixUp+index2]) {
+							index2++;
+							if(index2 == pattern.length) {
+								positionFound.add(posSuffixUp);
+								index2=0;
+								break;
+							}
+						}
 					}
+
+					//Recorro lista de sufijos HACIA ABAJO hasta que encuentro uno que no coincida
+					int index3 = 0;//contador para recorrer patrón y los sufijos posteriores a la coincidencia hallada
+					for (int i = 1; i<(suffixes.length -m) ; i++) {
+						int posSuffixDw = suffixes[m+i].suffixIndex;
+						if(pattern[index3] != content[posSuffixDw]) { //si el primer valor del patrón no coincide con el primero del sufijo, dejo de mirar ese sufijo ni anteriores
+							break;
+						}
+						while(pattern[index3] == content[posSuffixDw+index3]) {
+							index3++;
+							if(index3 == pattern.length) {
+								positionFound.add(posSuffixDw);
+								index3=0;
+								break;
+							}
+						}
+					}	
+				}
 			}
 			//DIVISION ESTANDAR DE BUSQUEDA BINARIA: si el principio del sufijo de suffixes[m] no coincide con el patrón
 			else if (pattern[index] < content[posSuffix+index]) { // el caracter del pattern es lexicográficamente anterior al carácter del sufijo

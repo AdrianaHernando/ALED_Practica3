@@ -151,7 +151,7 @@ public class FASTAReader {
 				break; //IMPROVEMENT: en cuanto una base del patrón no coincide, devuelve false
 			}
 		}
-		return match; //la variable ha ido cambiando para cada elemento
+		return match; 
 	}
 
 	/*
@@ -190,7 +190,7 @@ public class FASTAReader {
 	public List<Integer> search(byte[] pattern) {
 	//HECHO POR MI
 		List<Integer> initialPosition = new ArrayList<Integer>(); //Creo la lista que voy a devolver con las posiciones iniciales en las que aparece el patrón 
-		for(int i = 0; i < this.content.length; i++) { //recorro el array de datos
+		for(int i = 0; i < this.content.length; i++) { //recorro el array de datos// EN CORRECCIÓN: va hasta i<validBytes
 			try {
 				if (compareImproved (pattern, i)) { //ejecutando compare entre el pattern y cada posicion del array de datos
 					initialPosition.add(i);
